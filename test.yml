@@ -1,0 +1,7 @@
+- name: Assume Role
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - block:
+      - include: tasks/main.yml
+      - debug: msg="{{ sts_creds }}"
