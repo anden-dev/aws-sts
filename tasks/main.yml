@@ -3,7 +3,7 @@
   - set_fact:
       sts_region: "{{ sts_region 
         | default(lookup('env', 'AWS_DEFAULT_REGION')) 
-        | default('ap-southeast-2', true) }}"
+        | default('us-west-2', true) }}"
   tags:
     - always
 
