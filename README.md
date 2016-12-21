@@ -30,7 +30,7 @@ To set this role up as an Ansible Galaxy requirement, first create a `requiremen
 Once you have created `roles/requirements.yml`, you can install the role using the `ansible-galaxy` command line tool.
 
 ```
-$ ansible-galaxy install -r roles/requirements.yml -p ./roles/ --force
+$ ansible-galaxy install --role-file=roles/requirements.yml --roles-path=./roles/ --force
 $ git commit -a -m "Added aws-sts 0.1.0 role"
 ```
 
@@ -184,6 +184,9 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 ```
 
 ## Release Notes
+
+### Version 0.1.1
+update command to use non abbreviated options.
 
 ### Version 0.1.0
 
