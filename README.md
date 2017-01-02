@@ -185,8 +185,13 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 
 ## Release Notes
 
+### Version 0.1.2
+
+- Fix incorrect sts_session references
+
 ### Version 0.1.1
-update command to use non abbreviated options.
+
+- Update command to use non abbreviated options.
 
 ### Version 0.1.0
 

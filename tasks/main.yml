@@ -10,9 +10,9 @@
 - block:
   - name: checking if sts functions are sts_disabled
     debug: msg="Skipping STS functions as sts_disabled is defined"
-  - name: setting empty sts_session result
+  - name: setting empty sts_session_output result
     set_fact:
-      sts_session: {}
+      sts_session_output: {}
       sts_creds: {}
   - name: setting sts_creds if legacy AWS credentials are present (e.g. for Ansible Tower)
     set_fact:
@@ -53,8 +53,8 @@
   tags:
     - always
 
-- debug: msg={{ sts_session }}
-  when: debug is defined
+- debug: msg={{ sts_session_output }}
+  when: debug | default(false) | bool
   tags:
     - always
 
