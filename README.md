@@ -66,35 +66,38 @@ $ git commit -a -m "Updated to aws-sts 0.2.0 role"
 
 ### Inputs
 
-The STS role relies on the following inputs:
+The STS role relies on a top level `Sts` object that uses the following inputs:
 
-- `sts_role_arn` (Mandatory) - this variable must be provided by the calling playbook, representing the ARN of the role to assume
+- `Sts.Role` (Mandatory) - this variable must be provided by the calling playbook, representing the ARN of the role to assume
 
-- `sts_role_session_name` (Optional) - a name for the temporary session token that is generated
+- `Sts.SessionName` (Optional) - a name for the temporary session token that is generated
 
-- `sts_disable` (Optional) - disables all actions of this role.  Useful for long running playbooks that would be affected by the duration (maximum 60 minutes) of using STS token.
+- `Sts.Disabled` (Optional) - disables all actions of this role.  Useful for long running playbooks that would be affected by the duration (maximum 60 minutes) of using STS token.
 
-- `sts_region` (Optional) - the target AWS regions.  Alternatively you can set the AWS region using the `AWS_DEFAULT_REGION` environment variable.  If this is not in your environment, the playbook defaults to `ap-southeast-2`.
+- `Sts.Region` (Optional) - the target AWS region.  Alternatively you can set the AWS region using the `AWS_DEFAULT_REGION` environment variable.  If this is not in your environment, the playbook defaults to `ap-southeast-2`.
 
-- AWS credentials - you must configure the environment such that your credentials are available to assume the role.  For example, you can set an access key and secret key via environment variables, or configure a profile via environment variables, or rely on an EC2 instance profile if running in AWS.  A dictionary called `sts_creds` is output by this module, which sets up the appropriate configuration with AWS STS token settings.
+- AWS credentials - you must configure the environment such that your credentials are available to assume the role.  For example, you can set an access key and secret key via environment variables, or configure a profile via environment variables, or rely on an EC2 instance profile if running in AWS.  A dictionary called `Sts.Credentials` is output by this module, which sets up the appropriate configuration with AWS STS token settings.
 
 ### Outputs
 
-If the assume role operation is successful, the temporary credentials issued by AWS are registered to a variable called `sts_session`:
+If the assume role operation is successful, the temporary credentials issued by AWS are registered to `Sts.Credentials`:
 
-- `sts_session.sts_creds.access_key`
-- `sts_session.sts_creds.secret_key`
-- `sts_session.sts_creds.session_token`
+- `Sts.Credentials.AWS_ACCESS_KEY`
+- `Sts.Credentials.AWS_ACCESS_KEY_ID`
+- `Sts.Credentials.AWS_SECRET_KEY`
+- `Sts.Credentials.AWS_SECRET_ACCESS_KEY`
+- `Sts.Credentials.AWS_SECURITY_TOKEN`
+- `Sts.Credentials.AWS_DEFAULT_REGION`
 
-And a dictionary called `sts_creds` which you can configure as the environment for subsequent plays to operate under the privileges of the assumed role:
+You can configure `Sts.Credentials` as the environment for subsequent plays to operate under the privileges of the assumed role:
 
 ```
-AWS_DEFAULT_REGION: "{{ sts_region }}"
-AWS_ACCESS_KEY: "{{ sts_session.sts_creds.access_key }}"
-AWS_ACCESS_KEY_ID: "{{ sts_session.sts_creds.access_key }}"
-AWS_SECRET_KEY: "{{ sts_session.sts_creds.secret_key }}"
-AWS_SECRET_ACCESS_KEY: "{{ sts_session.sts_creds.secret_key }}"
-AWS_SECURITY_TOKEN: "{{ sts_session.sts_creds.session_token }}"
+AWS_DEFAULT_REGION: "{{ Sts.Credentials.AWS_DEFAULT_REGION }}"
+AWS_ACCESS_KEY: "{{ Sts.Credentials.AWS_ACCESS_KEY }}"
+AWS_ACCESS_KEY_ID: "{{ Sts.Credentials.AWS_ACCESS_KEY_ID }}"
+AWS_SECRET_KEY: "{{ Sts.Credentials.AWS_SECRET_KEY }}"
+AWS_SECRET_ACCESS_KEY: "{{ Sts.Credentials.AWS_SECRET_ACCESS_KEY` }}"
+AWS_SECURITY_TOKEN: "{{ Sts.Credentials.AWS_SECURITY_TOKEN` }}"
 ```
 
 You should call this role from a dedicated play, and then define your subsequent playbook tasks in separate plays.  This allows the `sts_creds` or individual `sts_session` variables to be used to configure the environment of your remaining tasks.
@@ -110,9 +113,10 @@ The following demonstrates how to call this role from a playbook:
   connection: local
   gather_facts: no
   vars:
-    sts_role_arn: "arn:aws:iam::123456789:role/admin"
-    sts_role_session_name: testAssumeRole
-    sts_region: us-west-2
+    Sts:
+      Role: arn:aws:iam::123456789:role/admin
+      SessionName: testAssumeRole
+      Region: us-west-2
   roles:
     - aws-sts
 ```
@@ -125,7 +129,7 @@ The following shows the recommended play configuration to use the temporary cred
 - name: My Playbook
   hosts: localhost
   connection: local
-  environment: "{{ sts_creds }}"
+  environment: "{{ Sts.Credentials }}"
   tasks:
    - ...
    - ...
@@ -140,7 +144,7 @@ You can run the included [`test.yml`](./test.yml) playbook to test this role dir
 To test the role you need to provide the role that you want to assume as demonstrated below:
 
 ```
-$ ansible-playbook test.yml -e sts_role_arn=arn:aws:iam::388576150228:role/diAdmin
+$ ansible-playbook test.yml -e Sts.Role=arn:aws:iam::429614120872:role/admin
 PLAY [Assume Role] *************************************************************
 
 TASK [set_fact] ****************************************************************
@@ -185,6 +189,10 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 ```
 
 ## Release Notes
+
+### Version 1.0
+
+- Switch to dot notation syntax
 
 ### Version 0.1.3
 

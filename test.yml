@@ -4,4 +4,4 @@
   tasks:
     - block:
       - include: tasks/main.yml
-      - debug: msg="{{ sts_creds }}"
+      - debug: msg="{{ Sts.Creds }}"
