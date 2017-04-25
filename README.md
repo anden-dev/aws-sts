@@ -186,6 +186,10 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 
 ## Release Notes
 
+### Version 0.1.3
+
+- Add Licensing Information
+
 ### Version 0.1.2
 
 - Fix incorrect sts_session references
