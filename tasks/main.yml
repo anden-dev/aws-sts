@@ -51,10 +51,14 @@
         AWS_SECRET_KEY: "{{ (sts_session_output.stdout | from_json)['Credentials']['SecretAccessKey'] }}"
         AWS_SECRET_ACCESS_KEY: "{{ (sts_session_output.stdout | from_json)['Credentials']['SecretAccessKey'] }}"
         AWS_SECURITY_TOKEN: "{{ (sts_session_output.stdout | from_json)['Credentials']['SessionToken'] }}"
+  when: not Sts.Disabled | default(false) | bool
+  tags:
+    - always
+
+- block:
   - name: set sts facts
     set_fact:
       Sts: "{{ Sts | combine({ 'Credentials': sts_creds },recursive=True) }}"
-  when: not Sts.Disabled | default(false) | bool
   tags:
     - always
 
