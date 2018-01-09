@@ -187,6 +187,10 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 
 ## Release Notes
 
+### Version 1.1
+
+- Add profile detection feature
+
 ### Version 1.0
 
 - Switch to dot notation syntax
