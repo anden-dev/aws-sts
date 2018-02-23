@@ -187,8 +187,9 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 
 ## Release Notes
 
-### Version 1.1
+### Version 2.4.0
 
+- Ansible 2.4 support
 - Add profile detection feature
 
 ### Version 1.0
