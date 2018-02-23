@@ -3,13 +3,12 @@
   - name: create sts variable
     set_fact:
       Sts: "{{ Sts | default({}) | combine((vars['hostvars'][env] | dotted_dict(paths=['Sts.'])).get('Sts') or {}, recursive=True) }}"
-
   - set_fact:
       sts_region: "{{ Sts.Region
         | default(lookup('env', 'AWS_DEFAULT_REGION')) 
         | default('us-west-2', true) }}"
   - set_fact:
-      Sts: "{{ Sts | combine({'Region': sts_region},recursive=True) }}"
+      Sts: "{{ Sts | combine({'Region': sts_region, 'Profile': Sts.Profile | default(lookup('env','AWS_PROFILE'))},recursive=True) }}"
   tags:
     - always
 
@@ -24,20 +23,29 @@
     set_fact:
       sts_creds:
         AWS_DEFAULT_REGION: "{{ sts_region }}"
-        AWS_ACCESS_KEY: "{{ lookup('env','AWS_ACCESS_KEY') }}"
-        AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY') }}"
-        AWS_SECRET_KEY: "{{ lookup('env','AWS_SECRET_KEY') }}"
-        AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_KEY') }}"
-    when: lookup('env','AWS_ACCESS_KEY') and lookup('env','AWS_SECRET_KEY')
+        AWS_ACCESS_KEY: "{{ lookup('env','AWS_ACCESS_KEY_ID') | default(lookup('env','AWS_ACCESS_KEY')) }}"
+        AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') | default(lookup('env','AWS_ACCESS_KEY')) }}"
+        AWS_SECRET_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_KEY')) }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') | default(lookup('env', 'AWS_SECRET_KEY')) }}"
+    when: (lookup('env','AWS_ACCESS_KEY') or lookup('env','AWS_ACCESS_KEY_ID')) and (lookup('env','AWS_SECRET_KEY') or lookup('env', 'AWS_SECRET_ACCESS_KEY'))
   when: Sts.Disabled | default(false) | bool
   tags:
     - always
 
 - block:
+  - name: get sts role from profile
+    shell: aws configure get role_arn --profile {{ Sts.Profile }}
+    changed_when: False
+    register: sts_role_output
+    when: Sts.Profile
+  - set_fact:
+      Sts: "{{ Sts | combine({'Role': Sts.Role | default(sts_role_output.stdout)},recursive=True) }}"
+    when: Sts.Profile is defined
   - name: assume sts role
     environment:
       AWS_DEFAULT_REGION: "{{ Sts.Region }}"
     shell: aws sts assume-role
+      {{ '--profile=' + Sts.Profile if Sts.Profile else '' }}
       --role-arn="{{ Sts.Role }}"
       --role-session-name="{{ Sts.SessionName | default('adminSession') }}"
     changed_when: False
@@ -50,6 +58,7 @@
         AWS_ACCESS_KEY_ID: "{{ (sts_session_output.stdout | from_json)['Credentials']['AccessKeyId'] }}"
         AWS_SECRET_KEY: "{{ (sts_session_output.stdout | from_json)['Credentials']['SecretAccessKey'] }}"
         AWS_SECRET_ACCESS_KEY: "{{ (sts_session_output.stdout | from_json)['Credentials']['SecretAccessKey'] }}"
+        AWS_SESSION_TOKEN: "{{ (sts_session_output.stdout | from_json)['Credentials']['SessionToken'] }}"
         AWS_SECURITY_TOKEN: "{{ (sts_session_output.stdout | from_json)['Credentials']['SessionToken'] }}"
   when: not Sts.Disabled | default(false) | bool
   tags:
@@ -62,8 +71,10 @@
   tags:
     - always
 
-- debug: msg={{ sts_session_output }}
+- block:
+  - debug: msg={{ sts_session_output }}
+  - name: Sts.Credentials variable
+    debug: msg={{ Sts.Credentials }}
   when: debug | default(false) | bool
   tags:
     - always
-

@@ -68,14 +68,11 @@ $ git commit -a -m "Updated to aws-sts 0.2.0 role"
 
 The STS role relies on a top level `Sts` object that uses the following inputs:
 
-- `Sts.Role` (Mandatory) - this variable must be provided by the calling playbook, representing the ARN of the role to assume
-
+- `Sts.Profile` (Conditional) - defines the local AWS profile that credentials should be obtained from.
+- `Sts.Role` (Optional) - defines the ARN of the role to assume.  If configured, this will override the role associated with the detected/configured profile.
 - `Sts.SessionName` (Optional) - a name for the temporary session token that is generated
-
-- `Sts.Disabled` (Optional) - disables all actions of this role.  Useful for long running playbooks that would be affected by the duration (maximum 60 minutes) of using STS token.
-
-- `Sts.Region` (Optional) - the target AWS region.  Alternatively you can set the AWS region using the `AWS_DEFAULT_REGION` environment variable.  If this is not in your environment, the playbook defaults to `ap-southeast-2`.
-
+- `Sts.Disabled` (Optional) - disables the assume role action of this role.  Useful for long running playbooks that would be affected by the duration (maximum 60 minutes) of using STS token.  You must set this flag whenever you use explicit AWS credentials in your local environment (e.g. you have configured access key, secret access key and session token as environment variables) and **you don't want to attempt to assume a role**.
+- `Sts.Region` (Optional) - the target AWS region.  Alternatively you can set the AWS region using the `AWS_DEFAULT_REGION` environment variable.  If this is not in your environment, the playbook defaults to `us-west-2`.
 - AWS credentials - you must configure the environment such that your credentials are available to assume the role.  For example, you can set an access key and secret key via environment variables, or configure a profile via environment variables, or rely on an EC2 instance profile if running in AWS.  A dictionary called `Sts.Credentials` is output by this module, which sets up the appropriate configuration with AWS STS token settings.
 
 ### Outputs
@@ -189,6 +186,11 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 ```
 
 ## Release Notes
+
+### Version 2.4.0
+
+- Ansible 2.4 support
+- Add profile detection feature
 
 ### Version 1.0
 
