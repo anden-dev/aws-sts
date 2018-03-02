@@ -11,11 +11,7 @@ This Ansible role allows a user to assume a given role, generating temporary sec
 
 ## Setup
 
-The recommended approach to use this role is an Ansible Galaxy requirement to your Ansible playbook project.
-
-Alternatively you can also configure this repository as a Git submodule to your Ansible playbook project. 
-
-### Installing using Ansible Galaxy
+To use this role, you must add the rola as Ansible Galaxy requirement to your Ansible playbook project.
 
 To set this role up as an Ansible Galaxy requirement, first create a `requirements.yml` file in a subfolder called `roles` and add an entry for this role.  See the [Ansible Galaxy documentation](http://docs.ansible.com/ansible/galaxy.html#installing-multiple-roles-from-a-file) for more details.
 
@@ -36,32 +32,6 @@ $ git commit -a -m "Added aws-sts 0.1.0 role"
 
 To update the role version, simply update the `requirements.yml` file and re-install the role as demonstrated above.
 
-### Installing using Git Submodule
-
-You can also install this role by adding this repository as a Git submodule and then checking out the required version.
-
-The submodule should be placed in the folder **roles/aws-sts**, and can then be referenced from your playbooks as a role called `aws-sts`.
-
-You should also checkout the specific release required for your project as demonstrated below:
-
-```
-$ git submodule add git@github.com:Casecommons/aws-sts.git roles/aws-sts
-Submodule path 'roles/aws-sts': checked out '05f584e53b0084f1a2a6a24de6380233768a1cf0'
-$ cd roles/aws-sts
-roles/aws-sts$ git checkout 0.1.0
-roles/aws-sts$ cd ../..
-$ git commit -a -m "Added aws-sts 0.1.0 role"
-```
-
-You can update to later versions of this role by updating your submodules:
-
-```
-$ git submodule update --remote roles/aws-sts
-$ cd roles/aws-sts
-roles/aws-sts$ git checkout 0.2.0
-roles/aws-sts$ cd ../..
-$ git commit -a -m "Updated to aws-sts 0.2.0 role"
-```
 ## Usage
 
 ### Inputs
@@ -99,6 +69,26 @@ AWS_SECURITY_TOKEN: "{{ Sts.Credentials.AWS_SECURITY_TOKEN` }}"
 
 You should call this role from a dedicated play, and then define your subsequent playbook tasks in separate plays.  This allows the `sts_creds` or individual `sts_session` variables to be used to configure the environment of your remaining tasks.
 
+### Role Assumption Behavior
+
+By default this role attempts to determine an STS role to assume using the following rules in order of precedence:
+
+1. Use the role defined by `Sts.Role`
+2. Lookup the role defined in the specified AWS profile if `Sts.Profile` is configured
+3. Lookup the role defined in the specified AWS profile if the `AWS_PROFILE` environment variable is set
+
+This role also attempts to determine your AWS region using the following rules in order of precedence:
+
+1.  Use the value of `Sts.Region` if defined
+2.  Use the value of the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variables if set
+3.  Use the region defined in your current AWS profile if configured
+4.  Return an error if none of the above methods can determine your region
+
+In order to assume the role, this role attempts to determine your AWS credentials using the following rules in order of precedence:
+
+1. Use the AWS profile defined by `Sts.Profile`
+2. Use the AWS profile in the specified AWS profile is the `AWS_PROFILE` environment variable is set
+3. Use standard AWS environment variables if configured
 
 ## Examples
 
@@ -186,6 +176,10 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 ```
 
 ## Release Notes
+
+### Version 2.4.1
+
+- Improve region handling
 
 ### Version 2.4.0
 
