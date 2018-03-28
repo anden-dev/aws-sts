@@ -5,8 +5,12 @@
       Sts: "{{ Sts | default({}) | combine((vars['hostvars'][env] | dotted_dict(paths=['Sts.'])).get('Sts') or {}, recursive=True) }}"
   - set_fact:
       sts_region: "{{ Sts.Region
-        | default(lookup('env', 'AWS_DEFAULT_REGION')) 
-        | default('us-west-2', true) }}"
+        | default(lookup('env', 'AWS_DEFAULT_REGION') or lookup('env', 'AWS_REGION'))
+        | default(lookup('pipe','aws configure get region || true') or '',true) }}"
+  - name: check region is present
+    fail:
+      msg: "Could not determine AWS region - please either configure Sts.Region, add a region to your AWS profile and set AWS_PROFILE, or set AWS_DEFAULT_REGION"
+    when: not sts_region
   - set_fact:
       Sts: "{{ Sts | combine({'Region': sts_region, 'Profile': Sts.Profile | default(lookup('env','AWS_PROFILE'))},recursive=True) }}"
   tags:
@@ -40,14 +44,14 @@
     when: Sts.Profile
   - set_fact:
       Sts: "{{ Sts | combine({'Role': Sts.Role | default(sts_role_output.stdout)},recursive=True) }}"
-    when: Sts.Profile is defined
+    when: Sts.Profile
   - name: assume sts role
     environment:
       AWS_DEFAULT_REGION: "{{ Sts.Region }}"
     shell: aws sts assume-role
       {{ '--profile=' + Sts.Profile if Sts.Profile else '' }}
       --role-arn="{{ Sts.Role }}"
-      --role-session-name="{{ Sts.SessionName | default('adminSession') }}"
+      --role-session-name="{{ Sts.SessionName | default(lookup('pipe','aws configure get role_session_name || true') if lookup('env', 'AWS_PROFILE') else 'adminSession') }}"
     changed_when: False
     register: sts_session_output
   - name: set sts facts
