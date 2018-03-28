@@ -177,6 +177,10 @@ localhost                  : ok=5    changed=0    unreachable=0    failed=0
 
 ## Release Notes
 
+### Version 2.5
+
+- Ansible 2.5 support
+
 ### Version 2.4.1
 
 - Improve region handling
